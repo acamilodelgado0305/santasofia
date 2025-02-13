@@ -135,14 +135,14 @@ const StudentRegistrationForm = ({ onStudentAdded }) => {
             <Form.Item
               name="eps"
               label="EPS"
-              rules={[{ required: true, message: "La EPS es requerida" }]}
+             
             >
               <Input placeholder="Ingrese la EPS" />
             </Form.Item>
             <Form.Item
               name="rh"
               label="RH"
-              rules={[{ required: true, message: "El RH es requerido" }]}
+             
             >
               <Input placeholder="Ingrese el RH" />
             </Form.Item>
