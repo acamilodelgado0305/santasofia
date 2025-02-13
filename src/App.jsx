@@ -1,11 +1,20 @@
 import React, { useState, useEffect } from "react";
-import { getPrograms } from "./services/studentService.js";
-import { Form, Input, Select, DatePicker, Button, message } from "antd";
+import { getPrograms } from "./services/studentService";
+import {
+  Form,
+  Input,
+  Select,
+  DatePicker,
+  Button,
+  Card,
+  message,
+  Space,
+} from "antd";
 import { UserOutlined, PhoneOutlined, IdcardOutlined } from "@ant-design/icons";
 
 const { Option } = Select;
 
-const StudentRegistrationFormMauricio = ({ onStudentAdded }) => {
+const StudentRegistrationForm = ({ onStudentAdded }) => {
   const [form] = Form.useForm();
   const [programas, setProgramas] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -20,49 +29,37 @@ const StudentRegistrationFormMauricio = ({ onStudentAdded }) => {
         message.error("Error al cargar los programas");
       }
     };
-
     fetchProgramsData();
   }, []);
 
   const handleSubmit = async (values) => {
     setLoading(true);
-    const apiUrl = "https://back.app.validaciondebachillerato.com.co/api/students";
-
+    const apiUrl =
+      "https://back.app.validaciondebachillerato.com.co/api/students";
     try {
       if (!values.fechaNacimiento) {
         throw new Error("La fecha de nacimiento es requerida");
       }
-
       const formattedValues = {
         ...values,
         fechaNacimiento: values.fechaNacimiento.format("YYYY-MM-DD"),
         programa_id: parseInt(values.programa_id, 10),
-        // Add default values here
         coordinador: "Mauricio Pulido",
         simat: "Inactivo",
-        pagoMatricula: false
+        pagoMatricula: false,
       };
-
-      console.log('Sending data:', formattedValues);
-
+      console.log("Sending data:", formattedValues);
       const response = await fetch(apiUrl, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formattedValues),
       });
-
-      console.log('Response status:', response.status);
-
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
         throw new Error(errorData?.message || `Error del servidor: ${response.status}`);
       }
-
       const data = await response.json();
-      console.log('Success response:', data);
-
+      console.log("Success response:", data);
       message.success("Estudiante registrado exitosamente");
       onStudentAdded?.();
       form.resetFields();
@@ -70,204 +67,199 @@ const StudentRegistrationFormMauricio = ({ onStudentAdded }) => {
       console.error("Error detallado al registrar el estudiante:", {
         message: error.message,
         stack: error.stack,
-        values: values
+        values: values,
       });
-
-      message.error(`Error al registrar el estudiante: ${error.message || 'Por favor intente nuevamente'}`);
+      message.error(
+        `Error al registrar el estudiante: ${
+          error.message || "Por favor intente nuevamente"
+        }`
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  return(
-
-
- 
-<div className="max-w-3xl mx-auto py-8 px-4">
-  {/* Logo container */}
-  <div className="flex justify-center mb-8">
-    <img 
-      src="../images/frame4.png"
-      alt="Logo de la institución" 
-      className="h-20 object-contain"
-    />
-  </div>
-
-  {/* Header rojo */}
-  <div className="bg-blue-100 rounded-t-lg p-6 border-b-8 border-blue-800">
-    <h1 className="text-3xl font-bold text-gray-800 mb-2">Registro de Estudiante</h1>
-    <p className="text-gray-600">Por favor complete todos los campos requeridos para registrar un nuevo estudiante.</p>
-  </div>
-
-  <Form
-    form={form}
-    layout="vertical"
-    onFinish={handleSubmit}
-    className="space-y-6"
-  >
-    {/* Información Personal */}
-    <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-      <h2 className="text-xl font-semibold text-gray-800 mb-4 pb-2 border-b">
-        Información Personal
-      </h2>
-      <div className="space-y-4">
-        <Form.Item name="nombre" label="Nombre" rules={[{ requiblue: true }]}>
-          <Input prefix={<UserOutlined />} className="h-10" />
-        </Form.Item>
-
-        <Form.Item name="apellido" label="Apellido" rules={[{ requiblue: true }]}>
-          <Input className="h-10" />
-        </Form.Item>
-
-        <Form.Item
-          name="email"
-          label="Correo Electrónico"
-          rules={[{ requiblue: true }, { type: 'email' }]}
-        >
-          <Input className="h-10" />
-        </Form.Item>
-
-        <Form.Item
-          name="fechaNacimiento"
-          label="Fecha de Nacimiento"
-          rules={[{ requiblue: true }]}
-        >
-          <DatePicker className="w-full h-10" />
-        </Form.Item>
-
-        <Form.Item name="eps" label="EPS" rules={[{ requiblue: true }]}>
-          <Input className="h-10" />
-        </Form.Item>
-
-        <Form.Item name="rh" label="RH" rules={[{ requiblue: true }]}>
-          <Input className="h-10" />
-        </Form.Item>
+  return (
+    <div className="max-w-5xl mx-auto py-8">
+      {/* Encabezado con el nombre de la institución */}
+      <div className="text-center mb-8">
+        <h1 className="text-4xl font-bold text-blue-800">Corporación Educativa Santa Sofía</h1>
+        <p className="text-gray-600 mt-2">Registro de Estudiantes</p>
       </div>
-    </div>
 
-    {/* Documentación */}
-    <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-      <h2 className="text-xl font-semibold text-gray-800 mb-4 pb-2 border-b">
-        Documentación
-      </h2>
-      <div className="space-y-4">
-        <Form.Item name="tipoDocumento" label="Tipo de Documento" rules={[{ requiblue: true }]}>
-          <Select className="h-10">
-            <Option value="CC">Cédula</Option>
-            <Option value="TI">Tarjeta de Identidad</Option>
-            <Option value="CE">Cédula Extranjería</Option>
-            <Option value="PA">Pasaporte</Option>
-          </Select>
-        </Form.Item>
-
-        <Form.Item
-          name="numeroDocumento"
-          label="Número de Documento"
-          rules={[{ requiblue: true }]}
-        >
-          <Input prefix={<IdcardOutlined />} className="h-10" />
-        </Form.Item>
-
-        <Form.Item
-          name="lugarExpedicion"
-          label="Lugar de Expedición"
-          rules={[{ requiblue: true }]}
-        >
-          <Input className="h-10" />
-        </Form.Item>
-      </div>
-    </div>
-
-    {/* Información de Contacto */}
-    <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-      <h2 className="text-xl font-semibold text-gray-800 mb-4 pb-2 border-b">
-        Información de Contacto
-      </h2>
-      <div className="space-y-4">
-        <Form.Item
-          name="telefonoLlamadas"
-          label="Teléfono para Llamadas"
-          rules={[{ requiblue: true }]}
-        >
-          <Input prefix={<PhoneOutlined />} className="h-10" />
-        </Form.Item>
-
-        <Form.Item
-          name="telefonoWhatsapp"
-          label="Teléfono para WhatsApp"
-          rules={[{ requiblue: true }]}
-        >
-          <Input prefix={<PhoneOutlined />} className="h-10" />
-        </Form.Item>
-      </div>
-    </div>
-
-    {/* Información Académica */}
-    <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-      <h2 className="text-xl font-semibold text-gray-800 mb-4 pb-2 border-b">
-        Información Académica
-      </h2>
-      <div className="space-y-4">
-        <Form.Item name="programa_id" label="Programa" rules={[{ requiblue: true }]}>
-          <Select className="h-10">
-            {programas.map((programa) => (
-              <Option key={programa.id} value={programa.id}>
-                {programa.nombre}
-              </Option>
-            ))}
-          </Select>
-        </Form.Item>
-
-        <Form.Item
-          name="ultimoCursoAprobado"
-          label="Último Curso Aprobado"
-          rules={[{ requiblue: true }]}
-        >
-          <Input className="h-10" />
-        </Form.Item>
-
-        <Form.Item name="modalidad_estudio" label="Modalidad de estudio" rules={[{ requiblue: true }]}>
-          <Select>
-            <Option value="Clases en Linea">Clases en Linea</Option>
-            <Option value="Modulos por WhastApp">Modulos por WhastApp</Option>
-          </Select>
-        </Form.Item>
-      </div>
-    </div>
-
-    {/* Información del Acudiente */}
-    <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-      <h2 className="text-xl font-semibold text-gray-800 mb-4 pb-2 border-b">
-        Información del Acudiente
-      </h2>
-      <div className="space-y-4">
-        <Form.Item name="nombreAcudiente" label="Nombre del Acudiente">
-          <Input className="h-10" />
-        </Form.Item>
-
-        <Form.Item name="telefonoAcudiente" label="Teléfono del Acudiente">
-          <Input prefix={<PhoneOutlined />} className="h-10" />
-        </Form.Item>
-
-        <Form.Item name="direccionAcudiente" label="Dirección del Acudiente">
-          <Input className="h-10" />
-        </Form.Item>
-      </div>
-    </div>
-
-    <div className="bg-white rounded-lg shadow-sm p-6">
-      <Button
-        type="primary"
-        htmlType="submit"
-        loading={loading}
-        className="w-full h-12 text-lg bg-blue-600 hover:bg-blue-700"
+      <Card
+        title="Formulario de Registro"
+        headStyle={{ backgroundColor: "#f0f5ff", fontWeight: "bold" }}
+        bordered={false}
+        style={{ marginBottom: 24 }}
       >
-        Registrar Estudiante
-      </Button>
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmit}
+          scrollToFirstError
+        >
+          {/* Información Personal */}
+          <Card title="Información Personal" bordered={false}>
+            <Form.Item
+              name="nombre"
+              label="Nombre"
+              rules={[{ required: true, message: "El nombre es requerido" }]}
+            >
+              <Input prefix={<UserOutlined />} placeholder="Ingrese el nombre" />
+            </Form.Item>
+            <Form.Item
+              name="apellido"
+              label="Apellido"
+              rules={[{ required: true, message: "El apellido es requerido" }]}
+            >
+              <Input placeholder="Ingrese el apellido" />
+            </Form.Item>
+            <Form.Item
+              name="email"
+              label="Correo Electrónico"
+              rules={[
+                { required: true, message: "El correo es requerido" },
+                { type: "email", message: "Ingrese un correo válido" },
+              ]}
+            >
+              <Input placeholder="Ingrese el correo electrónico" />
+            </Form.Item>
+            <Form.Item
+              name="fechaNacimiento"
+              label="Fecha de Nacimiento"
+              rules={[{ required: true, message: "La fecha de nacimiento es requerida" }]}
+            >
+              <DatePicker className="w-full" placeholder="Seleccione la fecha" />
+            </Form.Item>
+            <Form.Item
+              name="eps"
+              label="EPS"
+              rules={[{ required: true, message: "La EPS es requerida" }]}
+            >
+              <Input placeholder="Ingrese la EPS" />
+            </Form.Item>
+            <Form.Item
+              name="rh"
+              label="RH"
+              rules={[{ required: true, message: "El RH es requerido" }]}
+            >
+              <Input placeholder="Ingrese el RH" />
+            </Form.Item>
+          </Card>
+
+          {/* Documentación */}
+          <Card title="Documentación" bordered={false}>
+            <Form.Item
+              name="tipoDocumento"
+              label="Tipo de Documento"
+              rules={[{ required: true, message: "El tipo de documento es requerido" }]}
+            >
+              <Select placeholder="Seleccione el tipo de documento">
+                <Option value="CC">Cédula</Option>
+                <Option value="TI">Tarjeta de Identidad</Option>
+                <Option value="CE">Cédula Extranjería</Option>
+                <Option value="PA">Pasaporte</Option>
+              </Select>
+            </Form.Item>
+            <Form.Item
+              name="numeroDocumento"
+              label="Número de Documento"
+              rules={[{ required: true, message: "El número de documento es requerido" }]}
+            >
+              <Input prefix={<IdcardOutlined />} placeholder="Ingrese el número de documento" />
+            </Form.Item>
+            <Form.Item
+              name="lugarExpedicion"
+              label="Lugar de Expedición"
+              rules={[{ required: true, message: "El lugar de expedición es requerido" }]}
+            >
+              <Input placeholder="Ingrese el lugar de expedición" />
+            </Form.Item>
+          </Card>
+
+          {/* Información de Contacto */}
+          <Card title="Información de Contacto" bordered={false}>
+            <Form.Item
+              name="telefonoLlamadas"
+              label="Teléfono para Llamadas"
+              rules={[{ required: true, message: "El teléfono es requerido" }]}
+            >
+              <Input prefix={<PhoneOutlined />} placeholder="Ingrese el teléfono" />
+            </Form.Item>
+            <Form.Item
+              name="telefonoWhatsapp"
+              label="Teléfono para WhatsApp"
+              rules={[{ required: true, message: "El teléfono es requerido" }]}
+            >
+              <Input prefix={<PhoneOutlined />} placeholder="Ingrese el teléfono" />
+            </Form.Item>
+          </Card>
+
+          {/* Información Académica */}
+          <Card title="Información Académica" bordered={false}>
+            <Form.Item
+              name="programa_id"
+              label="Programa"
+              rules={[{ required: true, message: "El programa es requerido" }]}
+            >
+              <Select placeholder="Seleccione el programa">
+                {programas.map((programa) => (
+                  <Option key={programa.id} value={programa.id}>
+                    {programa.nombre}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+            <Form.Item
+              name="ultimoCursoAprobado"
+              label="Último Curso Aprobado"
+              rules={[{ required: true, message: "El curso es requerido" }]}
+            >
+              <Input placeholder="Ingrese el último curso aprobado" />
+            </Form.Item>
+            <Form.Item
+              name="modalidad_estudio"
+              label="Modalidad de estudio"
+              rules={[{ required: true, message: "La modalidad es requerida" }]}
+            >
+              <Select placeholder="Seleccione la modalidad">
+                <Option value="Clases en Linea">Clases en Línea</Option>
+                <Option value="Modulos por WhastApp">Módulos por WhatsApp</Option>
+              </Select>
+            </Form.Item>
+          </Card>
+
+          {/* Información del Acudiente */}
+          <Card title="Información del Acudiente" bordered={false}>
+            <Form.Item name="nombreAcudiente" label="Nombre del Acudiente">
+              <Input placeholder="Ingrese el nombre del acudiente" />
+            </Form.Item>
+            <Form.Item name="telefonoAcudiente" label="Teléfono del Acudiente">
+              <Input prefix={<PhoneOutlined />} placeholder="Ingrese el teléfono" />
+            </Form.Item>
+            <Form.Item name="direccionAcudiente" label="Dirección del Acudiente">
+              <Input placeholder="Ingrese la dirección" />
+            </Form.Item>
+          </Card>
+
+          {/* Botón de Envío */}
+          <Card bordered={false}>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={loading}
+              block
+              size="large"
+              style={{ backgroundColor: "#1890ff", borderColor: "#1890ff" }}
+            >
+              Registrar Estudiante
+            </Button>
+          </Card>
+        </Form>
+      </Card>
     </div>
-  </Form>
-</div>
   );
 };
 
-export default StudentRegistrationFormMauricio;
+export default StudentRegistrationForm;
