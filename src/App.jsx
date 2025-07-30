@@ -16,7 +16,7 @@ const DEFAULT_COORDINATOR_ID = 5;
 // la consulta del inventario del usuario con ID 3 sin necesidad de autenticación JWT
 // para este formulario público.
 const getInventarioByUser = async (userId) => {
-    const API_BASE_URL = import.meta.env.VITE_API_BACKEND || "https://back.app.validaciondebachillerato.com.co";
+    const API_BASE_URL = import.meta.env.VITE_API_BACKEND || "https://clasit-backend-api-570877385695.us-central1.run.app";
     try {
         console.log(`Intentando cargar inventario para user ID: ${userId} desde ${API_BASE_URL}/api/inventario/user/${userId}`);
         const response = await fetch(`${API_BASE_URL}/api/inventario/user/${userId}`, {
