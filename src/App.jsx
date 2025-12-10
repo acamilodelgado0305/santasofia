@@ -32,7 +32,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BACKEND || "https://clasit-backend
 // --- Servicio ---
 const getInventarioByUser = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/programas`, {
+    const response = await fetch(`${API_BASE_URL}/api/programs`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     });
