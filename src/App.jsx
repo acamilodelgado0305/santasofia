@@ -205,6 +205,7 @@ const StudentRegistrationForm = ({ onStudentRegistered, coordinatorId }) => {
   };
 
   // --- SUBMIT PRINCIPAL (Autónomo) ---
+// --- SUBMIT PRINCIPAL (Autónomo) ---
   const handleSubmit = async () => {
     setLoadingSubmit(true);
     try {
@@ -221,6 +222,11 @@ const StudentRegistrationForm = ({ onStudentRegistered, coordinatorId }) => {
         // Asegurar Array de Enteros
         programasIds: Array.isArray(values.programasIds) ? values.programasIds.map(id => parseInt(id, 10)) : [],
         
+        // --- 🟢 FIX CRÍTICO: Mapeo para la Base de Datos ---
+        // Asignamos el valor del input (camelCase) al campo de la BD (snake_case)
+        ultimo_curso_visto: values.ultimoCursoVisto,
+        // --------------------------------------------------
+
         // --- 🟢 CAMBIO CLAVE: Asignar ID de Coordinador ---
         coordinador_id: finalCoordinatorId,
         // --------------------------------------------------
@@ -234,7 +240,10 @@ const StudentRegistrationForm = ({ onStudentRegistered, coordinatorId }) => {
         telefonoAcudiente: null, direccionAcudiente: null, estado_matricula: false
       };
 
-      console.log("Enviando a ruta pública:", formattedValues);
+      // (Opcional) Limpieza: Borramos la clave camelCase para enviar un JSON más limpio
+      delete formattedValues.ultimoCursoVisto;
+
+      console.log("Enviando a ruta pública (Corregido):", formattedValues);
 
       // --- 🟢 CAMBIO CLAVE: Usar endpoint PUBLICO ---
       // No requiere token Authorization
