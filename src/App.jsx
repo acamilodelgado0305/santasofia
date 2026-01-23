@@ -10,7 +10,7 @@ import {
   Progress,
   Typography,
   Card,
-  Result // Importamos Result para la pantalla de éxito
+  Result
 } from "antd";
 import {
   UserOutlined,
@@ -25,44 +25,46 @@ const { Option } = Select;
 const { Title, Text } = Typography;
 
 // --- Configuración ---
-const DEFAULT_COORDINATOR_ID = 5;
+// ID por defecto si no se pasa como prop (Usuario 5 según tu código anterior)
+const DEFAULT_COORDINATOR_ID = 5; 
 const MICROSOFT_TEAL = "#008080";
+
+// Asegúrate de que esta URL sea accesible desde internet (sin localhost si ya está en producción)
 const API_BASE_URL = import.meta.env.VITE_API_BACKEND || "https://clasit-backend-api-570877385695.us-central1.run.app";
 
-// --- Servicio ---
-const getInventarioByUser = async () => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/programas`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    });
-    if (response.ok) {
-      const data = await response.json();
-      return Array.isArray(data) ? data : [];
-    }
-    return [];
-  } catch (err) {
-    console.error(err);
-    return [];
-  }
-};
-
-const StudentRegistrationForm = ({ onStudentRegistered }) => {
+const StudentRegistrationForm = ({ onStudentRegistered, coordinatorId }) => {
   const [form] = Form.useForm();
   const [programas, setProgramas] = useState([]);
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   const [loadingPrograms, setLoadingPrograms] = useState(true);
   const [currentStep, setCurrentStep] = useState(0);
   
-  // ✅ NUEVO ESTADO: Controla si el formulario ya fue enviado exitosamente
+  // Estado de éxito
   const [isSubmitted, setIsSubmitted] = useState(false);
 
+  // Determinar el ID final a usar (Prop o Default)
+  const finalCoordinatorId = coordinatorId || DEFAULT_COORDINATOR_ID;
+
+  // 1. Cargar Programas (Autónomo, sin servicio externo)
   useEffect(() => {
     const fetchProgramsData = async () => {
       setLoadingPrograms(true);
-      const data = await getInventarioByUser();
-      setProgramas(data);
-      setLoadingPrograms(false);
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/programas`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setProgramas(Array.isArray(data) ? data : []);
+        } else {
+          console.error("Error al cargar programas");
+        }
+      } catch (err) {
+        console.error("Error de conexión:", err);
+      } finally {
+        setLoadingPrograms(false);
+      }
     };
     fetchProgramsData();
   }, []);
@@ -186,13 +188,14 @@ const StudentRegistrationForm = ({ onStudentRegistered }) => {
     },
   ];
 
+  // --- Lógica de Navegación ---
   const next = async () => {
     try {
       await form.validateFields(steps[currentStep].fields);
       setCurrentStep(currentStep + 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
-      message.error("Completa los campos obligatorios.");
+      message.error("Por favor completa los campos obligatorios.");
     }
   };
 
@@ -201,23 +204,41 @@ const StudentRegistrationForm = ({ onStudentRegistered }) => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // --- SUBMIT PRINCIPAL (Autónomo) ---
   const handleSubmit = async () => {
     setLoadingSubmit(true);
     try {
       const values = form.getFieldsValue(true);
+      
+      // Validar último paso antes de enviar
       await form.validateFields(steps[currentStep].fields);
 
+      // Preparar el Payload
       const formattedValues = {
         ...values,
+        // Formatear Fecha
         fechaNacimiento: values.fechaNacimiento ? values.fechaNacimiento.format("YYYY-MM-DD") : null,
+        // Asegurar Array de Enteros
         programasIds: Array.isArray(values.programasIds) ? values.programasIds.map(id => parseInt(id, 10)) : [],
-        coordinador_id: DEFAULT_COORDINATOR_ID,
-        simat: false, pagoMatricula: false, activo: true, posibleGraduacion: false,
+        
+        // --- 🟢 CAMBIO CLAVE: Asignar ID de Coordinador ---
+        coordinador_id: finalCoordinatorId,
+        // --------------------------------------------------
+
+        // Valores por defecto
+        simat: false, 
+        pagoMatricula: false, 
+        activo: true, 
+        posibleGraduacion: false,
         eps: null, rh: null, nombreAcudiente: null, tipoDocumentoAcudiente: null, 
         telefonoAcudiente: null, direccionAcudiente: null, estado_matricula: false
       };
 
-      const response = await fetch(`${API_BASE_URL}/api/students`, {
+      console.log("Enviando a ruta pública:", formattedValues);
+
+      // --- 🟢 CAMBIO CLAVE: Usar endpoint PUBLICO ---
+      // No requiere token Authorization
+      const response = await fetch(`${API_BASE_URL}/api/public/students`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formattedValues),
@@ -225,17 +246,17 @@ const StudentRegistrationForm = ({ onStudentRegistered }) => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Error al guardar");
+        throw new Error(errorData.error || "Error al procesar la inscripción");
       }
 
-      // ✅ ÉXITO: Cambiamos el estado para mostrar la pantalla final
+      // Éxito
       setIsSubmitted(true);
-      onStudentRegistered?.();
+      if (onStudentRegistered) onStudentRegistered();
       window.scrollTo({ top: 0, behavior: 'smooth' });
 
     } catch (error) {
       console.error("Error Submit:", error);
-      message.error(`Error: ${error.message}`);
+      message.error(error.message || "Ocurrió un error inesperado.");
     } finally {
       setLoadingSubmit(false);
     }
@@ -243,7 +264,7 @@ const StudentRegistrationForm = ({ onStudentRegistered }) => {
 
   const progressPercent = Math.round(((currentStep) / steps.length) * 100);
 
-  // ✅ RENDERIZADO CONDICIONAL: Si ya se envió, mostrar pantalla de éxito
+  // --- Vista de Éxito ---
   if (isSubmitted) {
     return (
       <div className="min-h-screen bg-[#f0f2f5] py-8 px-4 flex flex-col items-center justify-center font-sans">
@@ -258,7 +279,7 @@ const StudentRegistrationForm = ({ onStudentRegistered }) => {
                 type="primary" 
                 key="console"
                 size="large"
-                onClick={() => window.location.href = 'https://wa.me/'} // Opcional: llevar a WhatsApp
+                onClick={() => window.location.href = 'https://wa.me/'} // Opcional
                 style={{ backgroundColor: MICROSOFT_TEAL, borderColor: MICROSOFT_TEAL }}
               >
                 Contactar Soporte
@@ -273,7 +294,7 @@ const StudentRegistrationForm = ({ onStudentRegistered }) => {
     );
   }
 
-  // Renderizado normal del formulario
+  // --- Vista del Formulario ---
   return (
     <div className="min-h-screen bg-[#f0f2f5] py-8 px-4 flex flex-col items-center font-sans">
       <Card 
