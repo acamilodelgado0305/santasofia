@@ -25,11 +25,10 @@ const { Option } = Select;
 const { Title, Text } = Typography;
 
 // --- Configuración ---
-// ID por defecto si no se pasa como prop (Usuario 5 según tu código anterior)
-const DEFAULT_COORDINATOR_ID = 5; 
+const DEFAULT_COORDINATOR_ID = 5;
+const DEFAULT_BUSINESS_ID = 2;
 const MICROSOFT_TEAL = "#008080";
 
-// Asegúrate de que esta URL sea accesible desde internet (sin localhost si ya está en producción)
 const API_BASE_URL = import.meta.env.VITE_API_BACKEND || "https://clasit-backend-api-570877385695.us-central1.run.app";
 
 const StudentRegistrationForm = ({ onStudentRegistered, coordinatorId }) => {
@@ -38,14 +37,10 @@ const StudentRegistrationForm = ({ onStudentRegistered, coordinatorId }) => {
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   const [loadingPrograms, setLoadingPrograms] = useState(true);
   const [currentStep, setCurrentStep] = useState(0);
-  
-  // Estado de éxito
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  // Determinar el ID final a usar (Prop o Default)
   const finalCoordinatorId = coordinatorId || DEFAULT_COORDINATOR_ID;
 
-  // 1. Cargar Programas (Autónomo, sin servicio externo)
   useEffect(() => {
     const fetchProgramsData = async () => {
       setLoadingPrograms(true);
@@ -69,7 +64,6 @@ const StudentRegistrationForm = ({ onStudentRegistered, coordinatorId }) => {
     fetchProgramsData();
   }, []);
 
-  // --- Estructura de Pasos ---
   const steps = [
     {
       title: "Intereses Académicos",
@@ -188,12 +182,11 @@ const StudentRegistrationForm = ({ onStudentRegistered, coordinatorId }) => {
     },
   ];
 
-  // --- Lógica de Navegación ---
   const next = async () => {
     try {
       await form.validateFields(steps[currentStep].fields);
       setCurrentStep(currentStep + 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (error) {
       message.error("Por favor completa los campos obligatorios.");
     }
@@ -201,52 +194,40 @@ const StudentRegistrationForm = ({ onStudentRegistered, coordinatorId }) => {
 
   const prev = () => {
     setCurrentStep(currentStep - 1);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // --- SUBMIT PRINCIPAL (Autónomo) ---
-// --- SUBMIT PRINCIPAL (Autónomo) ---
   const handleSubmit = async () => {
     setLoadingSubmit(true);
     try {
       const values = form.getFieldsValue(true);
-      
-      // Validar último paso antes de enviar
+
       await form.validateFields(steps[currentStep].fields);
 
-      // Preparar el Payload
       const formattedValues = {
         ...values,
-        // Formatear Fecha
         fechaNacimiento: values.fechaNacimiento ? values.fechaNacimiento.format("YYYY-MM-DD") : null,
-        // Asegurar Array de Enteros
-        programasIds: Array.isArray(values.programasIds) ? values.programasIds.map(id => parseInt(id, 10)) : [],
-        
-        // --- 🟢 FIX CRÍTICO: Mapeo para la Base de Datos ---
-        // Asignamos el valor del input (camelCase) al campo de la BD (snake_case)
+        programasIds: Array.isArray(values.programasIds) ? values.programasIds.map((id) => parseInt(id, 10)) : [],
         ultimo_curso_visto: values.ultimoCursoVisto,
-        // --------------------------------------------------
-
-        // --- 🟢 CAMBIO CLAVE: Asignar ID de Coordinador ---
         coordinador_id: finalCoordinatorId,
-        // --------------------------------------------------
-
-        // Valores por defecto
-        simat: false, 
-        pagoMatricula: false, 
-        activo: true, 
+        business_id: DEFAULT_BUSINESS_ID,
+        simat: false,
+        pagoMatricula: false,
+        activo: true,
         posibleGraduacion: false,
-        eps: null, rh: null, nombreAcudiente: null, tipoDocumentoAcudiente: null, 
-        telefonoAcudiente: null, direccionAcudiente: null, estado_matricula: false
+        eps: null,
+        rh: null,
+        nombreAcudiente: null,
+        tipoDocumentoAcudiente: null,
+        telefonoAcudiente: null,
+        direccionAcudiente: null,
+        estado_matricula: false,
       };
 
-      // (Opcional) Limpieza: Borramos la clave camelCase para enviar un JSON más limpio
       delete formattedValues.ultimoCursoVisto;
 
-      console.log("Enviando a ruta pública (Corregido):", formattedValues);
+      console.log("Enviando a ruta pública (business_id:", DEFAULT_BUSINESS_ID, "):", formattedValues);
 
-      // --- 🟢 CAMBIO CLAVE: Usar endpoint PUBLICO ---
-      // No requiere token Authorization
       const response = await fetch(`${API_BASE_URL}/api/public/students`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -258,11 +239,9 @@ const StudentRegistrationForm = ({ onStudentRegistered, coordinatorId }) => {
         throw new Error(errorData.error || "Error al procesar la inscripción");
       }
 
-      // Éxito
       setIsSubmitted(true);
       if (onStudentRegistered) onStudentRegistered();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (error) {
       console.error("Error Submit:", error);
       message.error(error.message || "Ocurrió un error inesperado.");
@@ -271,9 +250,8 @@ const StudentRegistrationForm = ({ onStudentRegistered, coordinatorId }) => {
     }
   };
 
-  const progressPercent = Math.round(((currentStep) / steps.length) * 100);
+  const progressPercent = Math.round((currentStep / steps.length) * 100);
 
-  // --- Vista de Éxito ---
   if (isSubmitted) {
     return (
       <div className="min-h-screen bg-[#f0f2f5] py-8 px-4 flex flex-col items-center justify-center font-sans">
@@ -284,63 +262,64 @@ const StudentRegistrationForm = ({ onStudentRegistered, coordinatorId }) => {
             title="¡Gracias! Tu respuesta ha sido enviada."
             subTitle="Hemos recibido tu inscripción correctamente. Un asesor académico revisará tu información y te contactará por WhatsApp muy pronto."
             extra={[
-              <Button 
-                type="primary" 
+              <Button
+                type="primary"
                 key="console"
                 size="large"
-                onClick={() => window.location.href = 'https://wa.me/'} // Opcional
+                onClick={() => window.location.href = "https://wa.me/"}
                 style={{ backgroundColor: MICROSOFT_TEAL, borderColor: MICROSOFT_TEAL }}
               >
                 Contactar Soporte
-              </Button>
+              </Button>,
             ]}
           />
-          <div className="mt-4 text-gray-400 text-sm">
-             Ya puedes cerrar esta página.
-          </div>
+          <div className="mt-4 text-gray-400 text-sm">Ya puedes cerrar esta página.</div>
         </Card>
       </div>
     );
   }
 
-  // --- Vista del Formulario ---
   return (
     <div className="min-h-screen bg-[#f0f2f5] py-8 px-4 flex flex-col items-center font-sans">
-      <Card 
+      <Card
         className="w-full max-w-3xl shadow-md rounded-t-lg overflow-hidden mb-4 border-0"
         bodyStyle={{ padding: 0 }}
       >
         <div style={{ backgroundColor: MICROSOFT_TEAL, height: "10px", width: "100%" }}></div>
         <div className="p-8 bg-white">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Formulario de Inscripción</h1>
-          <p className="text-gray-500 text-base">
-            Completa tu información para iniciar el proceso.
-          </p>
+          <p className="text-gray-500 text-base">Completa tu información para iniciar el proceso.</p>
         </div>
       </Card>
 
       <div className="w-full max-w-3xl mb-6 px-2">
-         <Progress percent={progressPercent} showInfo={false} strokeColor={MICROSOFT_TEAL} trailColor="#d1d5db" />
+        <Progress percent={progressPercent} showInfo={false} strokeColor={MICROSOFT_TEAL} trailColor="#d1d5db" />
       </div>
 
       <Card className="w-full max-w-3xl shadow-sm rounded-lg border-0">
         {loadingPrograms ? (
-           <div className="flex justify-center py-12"><Spin size="large" /></div>
+          <div className="flex justify-center py-12">
+            <Spin size="large" />
+          </div>
         ) : (
           <Form form={form} layout="vertical" className="pt-2" requiredMark={false}>
-            <div className="min-h-[300px]">
-                {steps[currentStep].content}
-            </div>
+            <div className="min-h-[300px]">{steps[currentStep].content}</div>
             <div className="mt-8 flex justify-between items-center pt-6 border-t border-gray-100">
               {currentStep > 0 ? (
-                <Button onClick={prev} size="large" className="px-8">Atrás</Button>
-              ) : <div></div>}
+                <Button onClick={prev} size="large" className="px-8">
+                  Atrás
+                </Button>
+              ) : (
+                <div></div>
+              )}
 
               {currentStep < steps.length - 1 && (
-                <Button 
-                    type="primary" onClick={next} size="large"
-                    style={{ backgroundColor: MICROSOFT_TEAL, borderColor: MICROSOFT_TEAL }}
-                    className="px-8"
+                <Button
+                  type="primary"
+                  onClick={next}
+                  size="large"
+                  style={{ backgroundColor: MICROSOFT_TEAL, borderColor: MICROSOFT_TEAL }}
+                  className="px-8"
                 >
                   Siguiente
                 </Button>
@@ -348,7 +327,10 @@ const StudentRegistrationForm = ({ onStudentRegistered, coordinatorId }) => {
 
               {currentStep === steps.length - 1 && (
                 <Button
-                  type="primary" onClick={handleSubmit} loading={loadingSubmit} size="large"
+                  type="primary"
+                  onClick={handleSubmit}
+                  loading={loadingSubmit}
+                  size="large"
                   style={{ backgroundColor: MICROSOFT_TEAL, borderColor: MICROSOFT_TEAL }}
                   className="px-8 flex items-center gap-2"
                 >
@@ -359,7 +341,9 @@ const StudentRegistrationForm = ({ onStudentRegistered, coordinatorId }) => {
           </Form>
         )}
       </Card>
-      <div className="mt-8 text-center text-gray-400 text-sm">Plataforma Educativa Segura • {new Date().getFullYear()}</div>
+      <div className="mt-8 text-center text-gray-400 text-sm">
+        Plataforma Educativa Segura • {new Date().getFullYear()}
+      </div>
     </div>
   );
 };
