@@ -26,7 +26,7 @@ const { Title, Text } = Typography;
 
 // --- Configuración ---
 const DEFAULT_COORDINATOR_ID = 5;
-const DEFAULT_BUSINESS_ID = 2;
+const DEFAULT_BUSINESS_ID = 1;
 const MICROSOFT_TEAL = "#008080";
 
 const API_BASE_URL = import.meta.env.VITE_API_BACKEND || "https://clasit-backend-api-570877385695.us-central1.run.app";
